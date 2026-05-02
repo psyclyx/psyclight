@@ -28,10 +28,11 @@
 
 ;; -- Pairing stream ------------------------------------------------------
 
+(defn- patches [fragments]
+  (apply str (map sse/patch-elements fragments)))
+
 (defn- pairing-event [{:keys [snapshot]}]
-  (let [renders [(pairing-view/permit-join-section snapshot)
-                 (pairing-view/touchlink-section   snapshot)]]
-    (apply str (map sse/patch-elements renders))))
+  (patches (pairing-view/live-fragments snapshot)))
 
 (defn- pairing-prelude [deps]
   [(pairing-event {:snapshot (pairing/snapshot (:pairing deps))})])

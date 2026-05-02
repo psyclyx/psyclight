@@ -41,18 +41,25 @@
            (fn [xs] (vec (take 50 (cons event xs)))))))
 
 (defn- record-touchlink-scan [state-atom payload]
-  (let [results (or (:found payload) (:result payload) [])
+  (let [data    (or (:data payload) {})
+        results (or (:found data) [])
         ts      (now-iso)]
-    (swap! state-atom assoc :touchlink {:scanned_at ts
+    (swap! state-atom assoc :touchlink {:scanning   false
+                                        :scanned_at ts
                                         :found      (vec results)
-                                        :status     (:status payload)})))
+                                        :status     (:status payload)
+                                        :error      (:error payload)})))
 
 (defn- record-touchlink-action [state-atom action payload]
   (swap! state-atom update :touchlink
-         #(assoc (or % {}) :last-action {:action action
-                                         :at     (now-iso)
-                                         :status (:status payload)
-                                         :data   (:data payload)})))
+         (fn [tl]
+           (-> (or tl {})
+               (assoc :scanning false)
+               (assoc :last-action {:action action
+                                    :at     (now-iso)
+                                    :status (:status payload)
+                                    :error  (:error payload)
+                                    :data   (:data payload)})))))
 
 ;; -- Inbound dispatch -----------------------------------------------------
 
@@ -114,10 +121,24 @@
 (defn snapshot [{:keys [state-atom]}]
   (if state-atom @state-atom {:events [] :touchlink nil :permit-join nil}))
 
+(defn- announce!
+  "Mutates state via `f` and publishes :pairing/changed so SSE
+   subscribers see the new state immediately, without waiting for a
+   round-trip through z2m."
+  [{:keys [event-bus state-atom]} f & args]
+  (let [new-state (apply swap! state-atom f args)]
+    (bus/publish! event-bus
+      {:topic    :pairing/changed
+       :changed  :command-issued
+       :snapshot new-state})
+    new-state))
+
 (defn permit-join!
   "Opens (or closes) the network for joins. `seconds` is the duration
    in seconds; pass 0 to close."
-  [{:keys [mqtt]} seconds]
+  [{:keys [mqtt] :as component} seconds]
+  (announce! component assoc :permit-join {:requested {:seconds seconds}
+                                           :at        (now-iso)})
   (mqtt/publish! mqtt (str req-prefix "permit_join")
                  {:value (pos? seconds)
                   :time  seconds}))
@@ -126,7 +147,9 @@
   "Scans for nearby zigbee devices in touchlink range. The dongle must
    be physically close to the target device; a successful scan returns
    a list of {ieee_address, channel} entries on the response topic."
-  [{:keys [mqtt]}]
+  [{:keys [mqtt] :as component}]
+  (announce! component assoc :touchlink {:scanning true
+                                         :started_at (now-iso)})
   (mqtt/publish! mqtt (str req-prefix "touchlink/scan") {}))
 
 (defn touchlink-identify!
@@ -145,3 +168,15 @@
   (mqtt/publish! mqtt (str req-prefix "touchlink/factory_reset")
                  {:ieee_address ieee_address
                   :channel      channel}))
+
+(defn touchlink-reset-nearest!
+  "Factory-resets whichever touchlink-permissive device is nearest the
+   coordinator, with no prior scan required. This is the z2m
+   recommended path for stubborn devices (notably Hue lights, which
+   only accept touchlink for ~30s after power-cycle and may not show
+   up on a scan)."
+  [{:keys [mqtt] :as component}]
+  (announce! component assoc :touchlink {:scanning   true
+                                         :mode       :reset-nearest
+                                         :started_at (now-iso)})
+  (mqtt/publish! mqtt (str req-prefix "touchlink/factory_reset") {}))

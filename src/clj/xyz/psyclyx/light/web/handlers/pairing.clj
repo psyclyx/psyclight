@@ -34,9 +34,15 @@
     (pairing/touchlink-factory-reset! (:pairing deps) body-params)
     {:status 204}))
 
+(defn- touchlink-reset-nearest [deps]
+  (fn [_req]
+    (pairing/touchlink-reset-nearest! (:pairing deps))
+    {:status 204}))
+
 (defn routes [deps]
   [["/pairing"                            {:get  {:handler (index deps)}}]
    ["/pairing/permit-join"                {:post {:handler (permit-join deps)}}]
    ["/pairing/touchlink/scan"             {:post {:handler (touchlink-scan deps)}}]
    ["/pairing/touchlink/identify"         {:post {:handler (touchlink-identify deps)}}]
-   ["/pairing/touchlink/factory-reset"    {:post {:handler (touchlink-factory-reset deps)}}]])
+   ["/pairing/touchlink/factory-reset"    {:post {:handler (touchlink-factory-reset deps)}}]
+   ["/pairing/touchlink/reset-nearest"    {:post {:handler (touchlink-reset-nearest deps)}}]])
