@@ -113,4 +113,4 @@
   [::layout/page {:title "Lights"}
    [::layout/section {:title "Lights"}
     (devices-grid snapshot)]
-   [:div {:data-on:load "@get('/events')"}]])
+   [:div {:data-init "@get('/events')"}]])

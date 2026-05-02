@@ -162,4 +162,4 @@
   [::layout/page {:title "Pair"}
    (permit-join-section state)
    (touchlink-section state)
-   [:div {:data-on:load "@get('/pairing/events')"}]])
+   [:div {:data-init "@get('/pairing/events')"}]])
