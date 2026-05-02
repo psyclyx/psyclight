@@ -11,6 +11,7 @@ The result is `result/bin/psyclight`.
 
 ## Run
 
+    PSYCLIGHT_HTTP_HOST=127.0.0.1 \
     PSYCLIGHT_HTTP_PORT=8080 \
     PSYCLIGHT_STATE_DIR=./state \
     PSYCLIGHT_RUNTIME_DIR=./runtime \
