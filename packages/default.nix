@@ -1,0 +1,3 @@
+{
+  psyclight = ./psyclight.nix;
+}
