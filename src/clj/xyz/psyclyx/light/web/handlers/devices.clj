@@ -21,8 +21,14 @@
   (fn [_req]
     (html-response (view/page (devices/snapshot (:devices deps))))))
 
-(defn- sigid [friendly]
-  (str/replace friendly #"[^A-Za-z0-9]" "_"))
+(defn- sigid
+  "Mirror of the view's sigid — must agree, since the page emits signals
+   keyed by sigid and the handler picks them out by sigid."
+  [friendly]
+  (let [cleaned (str/replace friendly #"[^A-Za-z0-9]" "_")]
+    (if (re-find #"^[A-Za-z_]" cleaned)
+      cleaned
+      (str "d_" cleaned))))
 
 (defn- card-signals
   "Pulls the relevant signal subtree out of the body and translates it

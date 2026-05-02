@@ -81,10 +81,10 @@
      [:td ieee_address]
      [:td (or channel "")]
      [:td.actions
-      [:button {:data-on-click (str "@post('/pairing/touchlink/identify/"
+      [:button {(keyword "data-on:click") (str "@post('/pairing/touchlink/identify/"
                                     ieee_address "/" ch "')")} "Identify"]
       [:button {:class "danger"
-                :data-on-click (str "@post('/pairing/touchlink/factory-reset/"
+                (keyword "data-on:click") (str "@post('/pairing/touchlink/factory-reset/"
                                     ieee_address "/" ch "')")}
        "Factory reset + rejoin"]]]))
 
@@ -107,8 +107,8 @@
     [:label "Seconds open "
      [:input {:type "number" :min 0 :max 600
               :data-bind "permitJoinSeconds"}]]
-    [:button {:data-on-click "@post('/pairing/permit-join')"} "Open"]
-    [:button {:data-on-click "@post('/pairing/permit-join/close')"} "Close"]]
+    [:button {(keyword "data-on:click") "@post('/pairing/permit-join')"} "Open"]
+    [:button {(keyword "data-on:click") "@post('/pairing/permit-join/close')"} "Close"]]
    (permit-join-status state)
    (join-events-table state)])
 
@@ -121,9 +121,9 @@
     "cycle. If a scan finds nothing, flick the wall switch off and on, "
     "then immediately Scan or Reset nearest."]
    [:div.button-row
-    [:button {:data-on-click "@post('/pairing/touchlink/scan')"} "Scan"]
+    [:button {(keyword "data-on:click") "@post('/pairing/touchlink/scan')"} "Scan"]
     [:button {:class "danger"
-              :data-on-click "@post('/pairing/touchlink/reset-nearest')"}
+              (keyword "data-on:click") "@post('/pairing/touchlink/reset-nearest')"}
      "Factory-reset nearest device"]]
    (touchlink-status state)
    (touchlink-results state)])

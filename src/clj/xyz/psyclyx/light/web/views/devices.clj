@@ -14,9 +14,17 @@
 ;; -- Helpers --------------------------------------------------------------
 
 (defn- sigid
-  "Sanitize a friendly name into a signal identifier (alnum + underscore)."
+  "Sanitize a friendly name into a signal identifier that's safe to use
+   as a JS property accessor. Datastar evaluates expressions like
+   `$lights.<sid>.state` as JS, so the id has to be a valid identifier
+   — alnum + underscore, and not starting with a digit (z2m's default
+   friendly name is the ieee address, e.g. `0x001788...`, which would
+   otherwise parse as a numeric literal)."
   [friendly]
-  (str/replace friendly #"[^A-Za-z0-9]" "_"))
+  (let [cleaned (str/replace friendly #"[^A-Za-z0-9]" "_")]
+    (if (re-find #"^[A-Za-z_]" cleaned)
+      cleaned
+      (str "d_" cleaned))))
 
 (defn- device-id [friendly] (str "device-" (sigid friendly)))
 
@@ -48,35 +56,40 @@
 (defn- post-set [friendly]
   (str "@post('/devices/" friendly "/set')"))
 
+;; Datastar v1 attribute syntax is `data-<plugin>:<key>` — colon, not
+;; hyphen. `data-on-click` parses as plugin name "on-click" (which
+;; isn't registered) and the handler is silently dropped; the `on`
+;; plugin matches `data-on:click`.
+(def ^:private k-on-click             (keyword "data-on:click"))
+(def ^:private k-on-input-debounce150 (keyword "data-on:input__debounce.150ms"))
+(def ^:private k-on-input-debounce250 (keyword "data-on:input__debounce.250ms"))
+
 ;; -- Controls -------------------------------------------------------------
 
 (defn- power-control [friendly sid]
   (let [path (str "$lights." sid ".state")]
     [:button
-     {:class "power"
-      :data-class    (str "{on: " path " == 'ON', off: " path " != 'ON'}")
-      :data-text     path
-      :data-on-click (str path " = " path " == 'ON' ? 'OFF' : 'ON'; " (post-set friendly))}]))
+     {:class      "power"
+      :data-class (str "{on: " path " == 'ON', off: " path " != 'ON'}")
+      :data-text  path
+      k-on-click  (str path " = " path " == 'ON' ? 'OFF' : 'ON'; " (post-set friendly))}]))
 
 (defn- range-control [friendly sid label sig-name min max]
   [:label.range
    [:span label]
-   [:input (cond->
-            {:type  "range"
-             :min   (str min)
-             :max   (str max)
-             :step  "1"
-             :data-bind (str "lights." sid "." sig-name)}
-             true (assoc (keyword "data-on-input__debounce.150ms")
-                         (post-set friendly)))]])
+   [:input {:type      "range"
+            :min       (str min)
+            :max       (str max)
+            :step      "1"
+            :data-bind (str "lights." sid "." sig-name)
+            k-on-input-debounce150 (post-set friendly)}]])
 
 (defn- color-control [friendly sid]
   [:label.range
    [:span "Color"]
-   [:input
-    {:type "color"
-     :data-bind (str "lights." sid ".color")
-     (keyword "data-on-input__debounce.250ms") (post-set friendly)}]])
+   [:input {:type      "color"
+            :data-bind (str "lights." sid ".color")
+            k-on-input-debounce250 (post-set friendly)}]])
 
 ;; -- Cards ----------------------------------------------------------------
 
