@@ -69,6 +69,12 @@
      (nil? touchlink)
      [:span.muted "Hold the dongle close to the target device, then scan."]
 
+     (and (= "ok" (:status touchlink)) (zero? (count (:found touchlink))))
+     [:span.muted
+      "Scan completed at " (:scanned_at touchlink) " — 0 devices responded. "
+      "Touchlink-permissive lights only respond for ~30s after a power "
+      "cycle: flick the wall switch off and on, then Scan again."]
+
      (= "ok" (:status touchlink))
      [:span.success (str "Scanned at " (:scanned_at touchlink) " — "
                          (count (:found touchlink)) " device(s) found.")]

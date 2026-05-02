@@ -83,9 +83,14 @@
         :pairing/touchlink-factory-reset)
 
     (str/starts-with? topic (response-topic "permit_join"))
-    (do (swap! state-atom assoc :permit-join {:status (:status payload)
-                                              :data   (:data payload)
-                                              :at     (now-iso)})
+    (do (swap! state-atom
+               (fn [s]
+                 (-> s
+                     (update :permit-join (fnil identity {}))
+                     (assoc-in [:permit-join :status] (:status payload))
+                     (assoc-in [:permit-join :error]  (:error  payload))
+                     (assoc-in [:permit-join :data]   (:data   payload))
+                     (assoc-in [:permit-join :at]     (now-iso)))))
         :pairing/permit-join)))
 
 ;; -- Component ------------------------------------------------------------
@@ -137,6 +142,7 @@
   "Opens (or closes) the network for joins. `seconds` is the duration
    in seconds; pass 0 to close."
   [{:keys [mqtt] :as component} seconds]
+  (log/info "CMD permit-join" {:seconds seconds})
   (announce! component assoc :permit-join {:requested {:seconds seconds}
                                            :at        (now-iso)})
   (mqtt/publish! mqtt (str req-prefix "permit_join")
@@ -148,6 +154,7 @@
    be physically close to the target device; a successful scan returns
    a list of {ieee_address, channel} entries on the response topic."
   [{:keys [mqtt] :as component}]
+  (log/info "CMD touchlink-scan")
   (announce! component assoc :touchlink {:scanning true
                                          :started_at (now-iso)})
   (mqtt/publish! mqtt (str req-prefix "touchlink/scan") {}))
@@ -155,7 +162,8 @@
 (defn touchlink-identify!
   "Tells a touchlink-found device to identify (e.g. blink) so the
    operator can confirm they're targeting the right physical light."
-  [{:keys [mqtt]} {:keys [ieee_address channel]}]
+  [{:keys [mqtt]} {:keys [ieee_address channel] :as args}]
+  (log/info "CMD touchlink-identify" args)
   (mqtt/publish! mqtt (str req-prefix "touchlink/identify")
                  {:ieee_address ieee_address
                   :channel      channel}))
@@ -164,7 +172,8 @@
   "Factory-resets a touchlink-found device. The device leaves whatever
    network it was on and immediately rejoins ours (because we're the
    coordinator it can hear)."
-  [{:keys [mqtt]} {:keys [ieee_address channel]}]
+  [{:keys [mqtt]} {:keys [ieee_address channel] :as args}]
+  (log/info "CMD touchlink-factory-reset" args)
   (mqtt/publish! mqtt (str req-prefix "touchlink/factory_reset")
                  {:ieee_address ieee_address
                   :channel      channel}))
@@ -176,6 +185,7 @@
    only accept touchlink for ~30s after power-cycle and may not show
    up on a scan)."
   [{:keys [mqtt] :as component}]
+  (log/info "CMD touchlink-reset-nearest")
   (announce! component assoc :touchlink {:scanning   true
                                          :mode       :reset-nearest
                                          :started_at (now-iso)})

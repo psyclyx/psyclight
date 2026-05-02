@@ -128,4 +128,5 @@
   "Publishes a state command to z2m's `<friendly>/set` topic. `delta` is
    a map of fields like {:state \"ON\" :brightness 200 :color {:x ... :y ...}}."
   [{:keys [mqtt]} friendly delta]
+  (log/info "CMD set-state" {:device friendly :delta delta})
   (mqtt/publish! mqtt (str base-topic "/" friendly "/set") delta))

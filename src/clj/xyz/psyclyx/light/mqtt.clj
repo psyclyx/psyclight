@@ -33,13 +33,28 @@
     (try (json/read-json s :key-fn keyword)
          (catch Exception _ s))))
 
+(defn- noisy-topic?
+  "True for high-frequency device-state topics that would drown the
+   journal at info level. Logged at debug instead."
+  [topic]
+  (or (re-find #"^zigbee2mqtt/[^/]+$" topic)
+      (re-find #"^zigbee2mqtt/[^/]+/availability$" topic)))
+
+(defn- log-recv [topic payload]
+  (let [line (str "RCV " topic " " (pr-str payload))]
+    (if (noisy-topic? topic)
+      (log/debug line)
+      (log/info line))))
+
 (defn- on-message
   "Translates a paho callback into a bus event."
   [event-bus topic ^MqttMessage msg]
-  (bus/publish! event-bus
-    {:topic      :mqtt/message
-     :mqtt-topic topic
-     :payload    (decode-payload msg)}))
+  (let [payload (decode-payload msg)]
+    (log-recv topic payload)
+    (bus/publish! event-bus
+      {:topic      :mqtt/message
+       :mqtt-topic topic
+       :payload    payload})))
 
 (defn- mk-callback [event-bus]
   (reify MqttCallback
@@ -104,4 +119,5 @@
            msg  (doto (MqttMessage. bs)
                   (.setQos (int qos))
                   (.setRetained retained?))]
+       (log/info "PUB" topic body)
        (.publish client ^String topic msg)))))
