@@ -3,14 +3,16 @@
    start, so this is the entry point on first run.
 
    The set of supported `adapter` values is z2m's; we offer the common
-   ones for a Sonoff stick (`zstack` for ZBDongle-P, `ezsp` for
-   ZBDongle-E). Users can pick the candidate device path from a select
-   populated by our serial-port discovery."
+   ones for a Sonoff stick (`zstack` for ZBDongle-P, `ember` for the
+   Silabs ZBDongle-E / Dongle Plus MG24). Note z2m 2.x dropped the old
+   `ezsp` driver in favour of `ember` for Silabs coordinators. Users can
+   pick the candidate device path from a select populated by our
+   serial-port discovery."
   (:require [xyz.psyclyx.light.web.views.layout :as layout]))
 
 (def ^:private adapter-types
   [{:value "zstack" :label "Z-Stack (Sonoff ZBDongle-P, CC2652P/2531/2530)"}
-   {:value "ezsp"   :label "EZSP (Sonoff ZBDongle-E, EFR32MG21)"}
+   {:value "ember"  :label "Ember (Sonoff ZBDongle-E / Dongle Plus MG24, EFR32 Silabs)"}
    {:value "deconz" :label "deCONZ (ConBee II/III, RaspBee)"}
    {:value "zigate" :label "ZiGate"}])
 
