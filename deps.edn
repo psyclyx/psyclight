@@ -38,8 +38,13 @@
                "[cider.nrepl/cider-middleware refactor-nrepl.middleware/wrap-refactor]"]}
 
   ;; clj -T:build uber
+  ;; Pin clojure to the project version: `-T` runs the build tool with
+  ;; replace-deps, so without this it resolves to tools.build's transitive
+  ;; clojure (1.12.4), which the deps-lock (resolved with the project's
+  ;; 1.12.5) never captures — breaking the clj-nix build.
   :build
-  {:deps      {io.github.clojure/tools.build {:mvn/version "0.10.12"}}
+  {:deps      {io.github.clojure/tools.build {:mvn/version "0.10.12"}
+               org.clojure/clojure {:mvn/version "1.12.5"}}
    :ns-default build}
 
   ;; clj -M:outdated [--upgrade]
