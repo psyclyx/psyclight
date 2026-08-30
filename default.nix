@@ -26,7 +26,7 @@ in
 {
   packages = mkPackages finalPkgs;
   inherit overlay;
-  shell = import ./shell.nix { pkgs = finalPkgs; };
+  shell = finalPkgs.callPackage ./nix/shell.nix { };
   default = finalPkgs.psyclight;
   nixosModules = {
     psyclight = import ./nix/module.nix;
