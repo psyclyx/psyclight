@@ -25,9 +25,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "549f2762aebeff29a2e5ece7a7dc0f955281a1d1",
-      "url": "https://github.com/lix-project/flake-compat/archive/549f2762aebeff29a2e5ece7a7dc0f955281a1d1.tar.gz",
-      "hash": "sha256-NKw96t+BgHIYzHUjkTK95FqYRVKB8DHpVhefWSz/kTw="
+      "revision": "382052b74656a369c5408822af3f2501e9b1af81",
+      "url": "https://github.com/lix-project/flake-compat/archive/382052b74656a369c5408822af3f2501e9b1af81.tar.gz",
+      "hash": "sha256-Eg9b/rq/ECYwNwEXs5i9wHyhxNI0JrYx2srdI2uZMaQ="
     },
     "nixpkgs": {
       "type": "Channel",
@@ -36,5 +36,5 @@
       "hash": "sha256-SpvueJPdKD+U/Q2btT3e3rAYgbPQP6nbcYYfK3BJQDA="
     }
   },
-  "version": 7
+  "version": 8
 }
